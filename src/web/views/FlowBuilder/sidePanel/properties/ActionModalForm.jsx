@@ -18,7 +18,7 @@ class ActionModalForm extends Component {
 
     this.state = {
       actionType: 'message',
-      functionSuggestions: [],
+      availableFunctions: [],
       functionInputValue: '',
       messageValue: '',
       functionParams: {},
@@ -65,7 +65,7 @@ class ActionModalForm extends Component {
 
   fetchAvailableFunctions() {
     return axios.get('/flows/available_functions').then(({ data }) => {
-      this.setState({ functionSuggestions: data.map(x => ({ label: x.name, value: x.name })) })
+      this.setState({ availableFunctions: data })
     })
   }
 
@@ -82,7 +82,7 @@ class ActionModalForm extends Component {
   }
 
   renderSectionCode() {
-    const { functionSuggestions } = this.state
+    const { availableFunctions } = this.state
 
     const tooltip = (
       <Tooltip id="notSeeingFunction">
@@ -132,9 +132,13 @@ class ActionModalForm extends Component {
           <Select
             name="functionToInvoke"
             value={this.state.functionInputValue}
-            options={functionSuggestions}
+            options={availableFunctions.map(x => ({ label: x.name, value: x.name }))}
             onChange={val => {
-              this.setState({ functionInputValue: val && val.value })
+              const { metadata } = availableFunctions.find(fn => fn.name === (val && val.value)) || {}
+              this.setState({
+                functionInputValue: val && val.value,
+                functionParams: _.fromPairs(metadata && metadata.params.map(param => [param.name, '']))
+              })
             }}
           />
         </div>
